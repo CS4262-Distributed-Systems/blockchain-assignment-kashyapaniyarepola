@@ -236,4 +236,29 @@ public final class AssetTransfer implements ContractInterface {
 
         return response;
     }
+
+
+    /**
+     * Duplicate an asset and assigns the duplicate to the new owner.
+     *
+     * @param ctx the transaction context
+     * @param assetID the ID of the asset being duplicated
+     * @param newAssetId the new ID of the asset being duplicated
+     * @param newOwner the new owner
+     * @return the old owner
+     */
+    @Transaction(intent = Transaction.TYPE.SUBMIT)
+    public Asset DuplicateAsset(final Context ctx, final String assetID, final String newAssetId, final String newOwner) {
+        ChaincodeStub stub = ctx.getStub();
+        String assetJSON = stub.getStringState(assetID);
+
+        if (assetJSON == null || assetJSON.isEmpty()) {
+            String errorMessage = String.format("Asset %s does not exist", assetID);
+            System.out.println(errorMessage);
+            throw new ChaincodeException(errorMessage, AssetTransferErrors.ASSET_NOT_FOUND.toString());
+        }
+
+        Asset assetOld = genson.deserialize(assetJSON, Asset.class);
+        return CreateAsset(ctx, newAssetId, assetOld.getColor(), assetOld.getSize(), newOwner, assetOld.getAppraisedValue());
+    }
 }
